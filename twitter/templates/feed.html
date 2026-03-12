@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+
+{% block title %}Feed - Social Network{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+        <!-- Sidebar Esquerdo -->
+        <div class="hidden md:block md:col-span-3 lg:col-span-2 space-y-6 sticky top-24 h-fit">
+            <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                <a href="{% url 'profile' request.user.username %}" class="flex items-center space-x-3" data-testid="sidebar-profile-link">
+                    {% if request.user.profile_picture %}
+                    <img src="{{ request.user.profile_picture.url }}" alt="{{ request.user.username }}" class="h-14 w-14 rounded-full object-cover border-2 border-white shadow-sm">
+                    {% else %}
+                    <div class="h-14 w-14 rounded-full bg-brand-900 flex items-center justify-center text-white text-xl font-semibold">
+                        {{ request.user.username|slice:":1"|upper }}
+                    </div>
+                    {% endif %}
+                    <div>
+                        <p class="font-semibold text-gray-900">{{ request.user.username }}</p>
+                        <p class="text-sm text-gray-500">Ver perfil</p>
+                    </div>
+                </a>
+                
+                <div class="mt-6 flex justify-around text-center border-t border-gray-100 pt-4">
+                    <div>
+                        <p class="text-2xl font-bold text-gray-900">{{ request.user.get_followers_count }}</p>
+                        <p class="text-xs text-gray-500 font-medium">Seguidores</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-gray-900">{{ request.user.get_following_count }}</p>
+                        <p class="text-xs text-gray-500 font-medium">Seguindo</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Feed Principal -->
+        <div class="col-span-1 md:col-span-9 lg:col-span-6 space-y-6">
+            <!-- Criar Post -->
+            <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                <form method="POST" action="{% url 'create_post' %}" enctype="multipart/form-data" data-testid="create-post-form">
+                    {% csrf_token %}
+                    <div class="flex space-x-4">
+                        {% if request.user.profile_picture %}
+                        <img src="{{ request.user.profile_picture.url }}" alt="{{ request.user.username }}" class="h-14 w-14 rounded-full object-cover border-2 border-white shadow-sm">
+                        {% else %}
+                        <div class="h-14 w-14 rounded-full bg-brand-900 flex items-center justify-center text-white text-xl font-semibold flex-shrink-0">
+                            {{ request.user.username|slice:":1"|upper }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="flex-1">
+                            <textarea 
+                                name="content" 
+                                rows="3" 
+                                placeholder="O que está acontecendo?"
+                                class="w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 focus:border-brand-900 focus:ring-brand-900 focus:bg-white transition-all outline-none resize-none"
+                                data-testid="post-content-textarea"
+                            ></textarea>
+                            
+                            <div class="mt-4 flex items-center justify-between">
+                                <label class="cursor-pointer text-gray-600 hover:text-brand-900 transition-colors" data-testid="upload-image-label">
+                                    <i data-lucide="image" class="w-5 h-5"></i>
+                                    <input type="file" name="image" accept="image/*" class="hidden" data-testid="post-image-input">
+                                </label>
+                                
+                                <button 
+                                    type="submit" 
+                                    class="bg-brand-900 text-white hover:bg-black rounded-full px-6 py-2.5 font-medium transition-transform active:scale-95 shadow-sm"
+                                    data-testid="post-submit-button"
+                                >
+                                    Publicar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Posts -->
+            {% for post in posts %}
+            <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow" data-testid="post-card">
+                <div class="flex space-x-4">
+                    <a href="{% url 'profile' post.user.username %}" data-testid="post-author-link">
+                        {% if post.user.profile_picture %}
+                        <img src="{{ post.user.profile_picture.url }}" alt="{{ post.user.username }}" class="h-14 w-14 rounded-full object-cover border-2 border-white shadow-sm">
+                        {% else %}
+                        <div class="h-14 w-14 rounded-full bg-brand-900 flex items-center justify-center text-white text-xl font-semibold">
+                            {{ post.user.username|slice:":1"|upper }}
+                        </div>
+                        {% endif %}
+                    </a>
+                    
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <a href="{% url 'profile' post.user.username %}" class="font-semibold text-gray-900 hover:text-accent" data-testid="post-author-username">
+                                    {{ post.user.username }}
+                                </a>
+                                <p class="text-sm text-gray-500">{{ post.created_at|timesince }} atrás</p>
+                            </div>
+                            
+                            {% if post.user == request.user %}
+                            <form method="POST" action="{% url 'delete_post' post.id %}" onsubmit="return confirm('Tem certeza que deseja deletar este post?');" data-testid="delete-post-form">
+                                {% csrf_token %}
+                                <button type="submit" class="text-gray-400 hover:text-red-600 transition-colors" data-testid="delete-post-button">
+                                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        
+                        <p class="mt-3 text-base leading-relaxed text-gray-700" data-testid="post-content">{{ post.content }}</p>
+                        
+                        {% if post.image %}
+                        <img src="{{ post.image.url }}" alt="Post image" class="mt-4 rounded-2xl w-full object-cover max-h-96" data-testid="post-image">
+                        {% endif %}
+                        
+                        <!-- Ações -->
+                        <div class="mt-4 flex items-center space-x-6 border-t border-gray-100 pt-4">
+                            <form method="POST" action="{% url 'like_post' post.id %}" class="inline" data-testid="like-post-form">
+                                {% csrf_token %}
+                                <button type="submit" class="flex items-center space-x-2 text-gray-600 hover:text-red-500 transition-colors group" data-testid="like-post-button">
+                                    <i data-lucide="heart" class="w-5 h-5 {% if post.liked %}fill-red-500 text-red-500{% endif %}"></i>
+                                    <span class="text-sm font-medium" data-testid="post-likes-count">{{ post.get_likes_count }}</span>
+                                </button>
+                            </form>
+                            
+                            <button 
+                                onclick="document.getElementById('comment-form-{{ post.id }}').classList.toggle('hidden')" 
+                                class="flex items-center space-x-2 text-gray-600 hover:text-accent transition-colors"
+                                data-testid="toggle-comment-button"
+                            >
+                                <i data-lucide="message-circle" class="w-5 h-5"></i>
+                                <span class="text-sm font-medium" data-testid="post-comments-count">{{ post.get_comments_count }}</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Formulário de Comentário -->
+                        <div id="comment-form-{{ post.id }}" class="hidden mt-4" data-testid="comment-form">
+                            <form method="POST" action="{% url 'comment_post' post.id %}" class="flex space-x-3">
+                                {% csrf_token %}
+                                <input 
+                                    type="text" 
+                                    name="content" 
+                                    placeholder="Adicionar um comentário..."
+                                    class="flex-1 rounded-full border-gray-200 bg-gray-50 px-4 py-2 text-sm focus:border-brand-900 focus:ring-brand-900 focus:bg-white transition-all outline-none"
+                                    data-testid="comment-content-input"
+                                >
+                                <button 
+                                    type="submit" 
+                                    class="bg-brand-900 text-white hover:bg-black rounded-full px-4 py-2 text-sm font-medium transition-transform active:scale-95"
+                                    data-testid="comment-submit-button"
+                                >
+                                    Enviar
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!-- Comentários -->
+                        {% if post.comments.all %}
+                        <div class="mt-4 space-y-3">
+                            {% for comment in post.comments.all|slice:":3" %}
+                            <div class="flex space-x-3" data-testid="comment-item">
+                                <a href="{% url 'profile' comment.user.username %}">
+                                    {% if comment.user.profile_picture %}
+                                    <img src="{{ comment.user.profile_picture.url }}" alt="{{ comment.user.username }}" class="h-10 w-10 rounded-full object-cover border border-gray-200">
+                                    {% else %}
+                                    <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-700 text-sm font-semibold">
+                                        {{ comment.user.username|slice:":1"|upper }}
+                                    </div>
+                                    {% endif %}
+                                </a>
+                                <div class="flex-1 bg-gray-50 rounded-2xl px-4 py-2">
+                                    <a href="{% url 'profile' comment.user.username %}" class="font-semibold text-sm text-gray-900 hover:text-accent" data-testid="comment-author-username">
+                                        {{ comment.user.username }}
+                                    </a>
+                                    <p class="text-sm text-gray-700 mt-1" data-testid="comment-content">{{ comment.content }}</p>
+                                    <p class="text-xs text-gray-500 mt-1">{{ comment.created_at|timesince }} atrás</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="bg-white border border-gray-100 rounded-2xl p-8 text-center shadow-sm" data-testid="empty-feed">
+                <i data-lucide="users" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Seu feed está vazio</h3>
+                <p class="text-gray-600 mb-6">Comece seguindo pessoas para ver suas publicações aqui!</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Sidebar Direito -->
+        <div class="hidden lg:block lg:col-span-4 space-y-6 sticky top-24 h-fit">
+    <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+        <h3 class="text-xl font-semibold text-gray-900 mb-4">Quem seguir</h3>
+        
+        <div class="space-y-4">
+            {% for sug_user in users_to_follow %}
+            <div class="flex items-center justify-between" data-testid="suggestion-item">
+                <div class="flex items-center space-x-3">
+                    <a href="{% url 'profile' sug_user.username %}">
+                        {% if sug_user.profile_picture %}
+                            <img src="{{ sug_user.profile_picture.url }}" alt="{{ sug_user.username }}" class="h-10 w-10 rounded-full object-cover border border-gray-100">
+                        {% else %}
+                            <div class="h-10 w-10 rounded-full bg-brand-900 flex items-center justify-center text-white text-xs font-bold">
+                                {{ sug_user.username|slice:":1"|upper }}
+                            </div>
+                        {% endif %}
+                    </a>
+                    <div>
+                        <a href="{% url 'profile' sug_user.username %}" class="font-semibold text-sm text-gray-900 hover:text-brand-900">
+                            {{ sug_user.username }}
+                        </a>
+                        <p class="text-xs text-gray-500">@{{ sug_user.username }}</p>
+                    </div>
+                </div>
+
+                <form method="POST" action="{% url 'follow_user' sug_user.username %}">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-black text-white text-xs font-bold px-4 py-2 rounded-full hover:bg-gray-800 transition-all active:scale-95">
+                        Seguir
+                    </button>
+                </form>
+            </div>
+            {% empty %}
+            <p class="text-sm text-gray-500 italic">Nenhuma sugestão no momento.</p>
+            {% endfor %}
+        </div>
+
+        <button class="mt-6 w-full text-brand-900 text-sm font-medium hover:bg-gray-50 py-2 rounded-xl transition-colors">
+            Mostrar mais
+        </button>
+    </div>
+    
+    <div class="px-6 text-xs text-gray-400 space-x-2">
+        <a href="#" class="hover:underline">Termos</a>
+        <a href="#" class="hover:underline">Privacidade</a>
+        <span>&copy; 2026 Twi-tter</span>
+    </div>
+</div>
+{% endblock %}

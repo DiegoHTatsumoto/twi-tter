@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Seguidores de {{ profile_user.username }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-6">
+        <a href="{% url 'profile' profile_user.username %}" class="text-accent hover:text-accent-hover font-medium flex items-center space-x-2" data-testid="back-to-profile-link">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            <span>Voltar ao perfil</span>
+        </a>
+    </div>
+    
+    <div class="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm">
+        <h1 class="text-3xl font-semibold text-gray-900 mb-6">Seguidores de {{ profile_user.username }}</h1>
+        
+        <div class="space-y-4">
+            {% for follow in followers %}
+            <div class="flex items-center justify-between p-4 hover:bg-gray-50 rounded-2xl transition-colors" data-testid="follower-item">
+                <a href="{% url 'profile' follow.follower.username %}" class="flex items-center space-x-4 flex-1" data-testid="follower-link">
+                    {% if follow.follower.profile_picture %}
+                    <img src="{{ follow.follower.profile_picture.url }}" alt="{{ follow.follower.username }}" class="h-14 w-14 rounded-full object-cover border-2 border-white shadow-sm">
+                    {% else %}
+                    <div class="h-14 w-14 rounded-full bg-brand-900 flex items-center justify-center text-white text-xl font-semibold">
+                        {{ follow.follower.username|slice:":1"|upper }}
+                    </div>
+                    {% endif %}
+                    
+                    <div>
+                        <p class="font-semibold text-gray-900" data-testid="follower-username">{{ follow.follower.username }}</p>
+                        {% if follow.follower.first_name %}
+                        <p class="text-sm text-gray-500">{{ follow.follower.first_name }} {{ follow.follower.last_name }}</p>
+                        {% endif %}
+                        {% if follow.follower.bio %}
+                        <p class="text-sm text-gray-600 mt-1">{{ follow.follower.bio|truncatewords:15 }}</p>
+                        {% endif %}
+                    </div>
+                </a>
+                
+                {% if follow.follower != request.user %}
+                <form method="POST" action="{% url 'follow_user' follow.follower.username %}" data-testid="follow-follower-form">
+                    {% csrf_token %}
+                    <button 
+                        type="submit" 
+                        class="{% if request.user.is_following follow.follower %}bg-white text-gray-900 border border-gray-200 hover:bg-gray-50{% else %}bg-brand-900 text-white hover:bg-black{% endif %} rounded-full px-6 py-2.5 font-medium transition-transform active:scale-95 shadow-sm"
+                        data-testid="follow-follower-button"
+                    >
+                        {% if request.user.is_following follow.follower %}Seguindo{% else %}Seguir{% endif %}
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div class="text-center py-12" data-testid="empty-followers">
+                <i data-lucide="users" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+                <p class="text-lg text-gray-600">Nenhum seguidor ainda</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
