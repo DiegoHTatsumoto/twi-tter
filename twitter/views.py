@@ -187,6 +187,7 @@ def edit_profile_view(request):
                 return render(request, 'edit_profile.html')
         
         user.save()
+
         messages.success(request, 'Perfil atualizado com sucesso!')
         return redirect('profile', username=user.username)
     

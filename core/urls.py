@@ -16,7 +16,8 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
+from django.views.static import serve
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -26,4 +27,8 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) #aqui e encaminha a midia que esta no seu computador para o navegador
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)#aqui e encaminha a midia que esta no seu computador para o navegador
+else:
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    ] 
