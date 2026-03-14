@@ -42,10 +42,10 @@
                     {% csrf_token %}
                     <button 
                         type="submit" 
-                        class="{% if request.user.is_following follow.following %}bg-white text-gray-900 border border-gray-200 hover:bg-gray-50{% else %}bg-brand-900 text-white hover:bg-black{% endif %} rounded-full px-6 py-2.5 font-medium transition-transform active:scale-95 shadow-sm"
+                        class="{% if follow.following.id in following_ids %}bg-white text-gray-900 border border-gray-200 hover:bg-gray-50{% else %}bg-brand-900 text-white hover:bg-black{% endif %} ..."
                         data-testid="follow-following-button"
                     >
-                        {% if request.user.is_following follow.following %}Seguindo{% else %}Seguir{% endif %}
+                        {% if follow.following.id in following_ids %}Seguindo{% else %}Seguir{% endif %}
                     </button>
                 </form>
                 {% endif %}

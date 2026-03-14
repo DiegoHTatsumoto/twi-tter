@@ -213,14 +213,18 @@ def follow_user_view(request, username):
 
 @login_required
 def followers_view(request, username):
-    user = get_object_or_404(User, username=username)
-    followers = Follow.objects.filter(following=user).select_related('follower')
-    
-    context = {
-        'profile_user': user,
+    profile_user = get_object_or_404(User, username=username)
+    followers = profile_user.followers.all()
+    if request.user.is_authenticated:
+        following_ids = request.user.following.values_list('following_id', flat=True)
+    else:
+        following_ids = []
+
+    return render(request, 'followers.html', {
+        'profile_user': profile_user,
         'followers': followers,
-    }
-    return render(request, 'followers.html', context)
+        'following_ids': following_ids,
+    })
 
 @login_required
 def following_view(request, username):
