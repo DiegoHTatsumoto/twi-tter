@@ -17,7 +17,7 @@
 
 ## O que o projeto propõe
 
-* Arquitetura back-end escalável
+* Arquitetura fullstack escalável
 * Cadastro e Login de forma segura
 * Alteração de senha
 * Edição de perfil
